@@ -18,8 +18,8 @@ def writeToken(token, filename):
 
 if '__main__' == __name__:
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--clientSecrets', help='file containing clientSecrets in JSON format')
-    parser.add_argument('-t', '--tokenFile', help='file that will be written with token in JSON format')
+    parser.add_argument('-c', '--clientSecrets', required=True, help='file containing clientSecrets in JSON format')
+    parser.add_argument('-t', '--tokenFile', required=True, help='file that will be written with token in JSON format')
     args = parser.parse_args()
     token = promptForCode(args.clientSecrets)
     writeToken(json.loads(token.to_json()), args.tokenFile)
