@@ -17,14 +17,14 @@ def get_access_token(tokenFile, refresh=False):
         credentials.authorize(http)
     return(credentials.access_token)
 
-def enumerate_documents(ss_feed, sheets):
+def enumerate_documents(ss_feed, worksheets):
     for entry in ss_feed.entry:
         spreadsheet_id = entry.id.text.rsplit('/',1)[1]
         print(spreadsheet_id)
-        if sheets:
-            enumerate_sheets(spreadsheet_id)
+        if worksheets:
+            enumerate_worksheets(spreadsheet_id)
 
-def enumerate_sheets(spreadsheet_id):
+def enumerate_worksheets(spreadsheet_id):
     ws_feed = gd_client.GetWorksheetsFeed(spreadsheet_id)
     print('number of worksheets found with is {}'.format(len(ws_feed.entry)))
     for entry in ws_feed.entry:
@@ -35,7 +35,7 @@ if '__main__' == __name__:
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--tokenFile', action='store', required=True, help='file containing OAuth token in JSON format')
     parser.add_argument('-n', '--name', action='store', required=True, help='name of the spreadsheet')
-    parser.add_argument('-s', '--sheets', action='store_true', help='set this to list out sheets (tabs) in each spreadsheet')
+    parser.add_argument('-w', '--worksheets', action='store_true', help='set this to list out worksheets (tabs) in each spreadsheet')
     args = parser.parse_args()
 
     q = gdata.spreadsheet.service.DocumentQuery()
@@ -52,4 +52,4 @@ if '__main__' == __name__:
         gd_client.additional_headers={'Authorization' : 'Bearer %s' % access_token}
         ss_feed = gd_client.GetSpreadsheetsFeed(query=q)
     print('number of spreadsheets found with the name {} is {}'.format(args.name, len(ss_feed.entry)))
-    enumerate_documents(ss_feed, args.sheets)
+    enumerate_documents(ss_feed, args.worksheets)
