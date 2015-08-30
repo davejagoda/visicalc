@@ -17,17 +17,17 @@ def get_access_token(tokenFile, refresh=False):
         credentials.authorize(http)
     return(credentials.access_token)
 
-def enumerate_documents(feed, sheets):
-    for entry in feed.entry:
+def enumerate_documents(ss_feed, sheets):
+    for entry in ss_feed.entry:
         spreadsheet_id = entry.id.text.rsplit('/',1)[1]
         print(spreadsheet_id)
         if sheets:
             enumerate_sheets(spreadsheet_id)
 
 def enumerate_sheets(spreadsheet_id):
-    feed = gd_client.GetWorksheetsFeed(spreadsheet_id)
-    print('number of worksheets found with is {}'.format(len(feed.entry)))
-    for entry in feed.entry:
+    ws_feed = gd_client.GetWorksheetsFeed(spreadsheet_id)
+    print('number of worksheets found with is {}'.format(len(ws_feed.entry)))
+    for entry in ws_feed.entry:
         worksheet_id = entry.id.text.rsplit('/',1)[1]
         print(' ' + worksheet_id + ' ' + entry.title.text)
 
@@ -46,10 +46,10 @@ if '__main__' == __name__:
     access_token = get_access_token(args.tokenFile)
     gd_client.additional_headers={'Authorization' : 'Bearer %s' % access_token}
     try:
-        feed = gd_client.GetSpreadsheetsFeed(query=q)
+        ss_feed = gd_client.GetSpreadsheetsFeed(query=q)
     except:
         access_token = get_access_token(args.tokenFile, refresh=True)
         gd_client.additional_headers={'Authorization' : 'Bearer %s' % access_token}
-        feed = gd_client.GetSpreadsheetsFeed(query=q)
-    print('number of spreadsheets found with the name {} is {}'.format(args.name, len(feed.entry)))
-    enumerate_documents(feed, args.sheets)
+        ss_feed = gd_client.GetSpreadsheetsFeed(query=q)
+    print('number of spreadsheets found with the name {} is {}'.format(args.name, len(ss_feed.entry)))
+    enumerate_documents(ss_feed, args.sheets)
