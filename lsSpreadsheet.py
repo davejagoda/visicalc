@@ -36,7 +36,7 @@ def enumerate_worksheets(spreadsheet_id, show_rows, verbose=False):
 def enumerate_documents(ss_feed, show_worksheets, show_rows, verbose=False):
     for entry in ss_feed.entry:
         spreadsheet_id = entry.id.text.rsplit('/',1)[1]
-        if verbose: print(spreadsheet_id)
+        if verbose: print('{} {}'.format(spreadsheet_id, entry.title.text))
         if show_worksheets:
             enumerate_worksheets(spreadsheet_id, show_rows, verbose=verbose)
 
@@ -50,7 +50,6 @@ if '__main__' == __name__:
     args = parser.parse_args()
 
     q = gdata.spreadsheet.service.DocumentQuery()
-    q['title-exact'] = 'true'
     q['title'] = args.name
 
     gd_client = gdata.spreadsheet.service.SpreadsheetsService()
@@ -62,5 +61,5 @@ if '__main__' == __name__:
         access_token = get_access_token(args.tokenFile, refresh=True, verbose=args.verbose)
         gd_client.additional_headers={'Authorization' : 'Bearer %s' % access_token}
         ss_feed = gd_client.GetSpreadsheetsFeed(query=q)
-    print('number of spreadsheets found with the name {} is {}'.format(args.name, len(ss_feed.entry)))
+    print('number of spreadsheets containing the name {} is {}'.format(args.name, len(ss_feed.entry)))
     enumerate_documents(ss_feed, args.worksheets, args.rows, verbose=args.verbose)
