@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
 # finds skipped numbers in column A
+# OR
+# find out of order dates in column A
 
 import argparse
 import httplib2
+import datetime
 import oauth2client.client
 import gdata.spreadsheet.service
 
@@ -19,7 +22,7 @@ def get_access_token(tokenFile, refresh=False, verbose=False):
         credentials.authorize(http)
     return(credentials.access_token)
 
-def validate_sheet(spreadsheet_id, worksheet_id, verbose=False):
+def validate_sheet_for_integers(spreadsheet_id, worksheet_id, verbose=False):
     value = 0
     cells_feed = gd_client.GetCellsFeed(spreadsheet_id, worksheet_id)
     for entry in cells_feed.entry:
@@ -32,6 +35,28 @@ def validate_sheet(spreadsheet_id, worksheet_id, verbose=False):
                     if value + 1 != int(entry.content.text):
                         print('skipped one: {} {}?'.format(value, int(entry.content.text)))
                     value = int(entry.content.text)
+
+def validate_sheet_for_dates(spreadsheet_id, worksheet_id, verbose=False):
+    date = None
+    cells_feed = gd_client.GetCellsFeed(spreadsheet_id, worksheet_id)
+    for entry in cells_feed.entry:
+        if verbose: print('row:{} col:{} contents:{}'.format(entry.cell.row, entry.cell.col, entry.content.text))
+        if '1' == entry.cell.col:
+            if ('Date' == entry.content.text):
+                pass
+            else:
+                if verbose: print(entry.content.text)
+                try:
+                    if verbose: print(datetime.datetime.strptime(entry.content.text, '%m/%d/%Y'))
+                    if None == date:
+                        date = datetime.datetime.strptime(entry.content.text, '%m/%d/%Y')
+                    else:
+                        if date <= datetime.datetime.strptime(entry.content.text, '%m/%d/%Y'):
+                            date = datetime.datetime.strptime(entry.content.text, '%m/%d/%Y')
+                        else:
+                            print('out of order date on worksheet:{} row:{}'.format(worksheet_id, entry.cell.row))
+                except:
+                    print('bad date format on worksheet:{} row:{}'.format(worksheet_id, entry.cell.row))
 
 def list_all_worksheets(spreadsheet_id, verbose=False):
     results = []
@@ -57,8 +82,10 @@ if '__main__' == __name__:
     parser.add_argument('-t', '--tokenFile', action='store', required=True, help='file containing OAuth token in JSON format')
     parser.add_argument('-n', '--name', action='store', required=True, help='name of the spreadsheet')
     parser.add_argument('-v', '--verbose', action='store_true', help='be verbose')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-d', '--dates', action="store_true")
+    group.add_argument('-i', '--integers', action="store_true")
     args = parser.parse_args()
-
     q = gdata.spreadsheet.service.DocumentQuery()
     q['title'] = args.name
 
@@ -75,4 +102,7 @@ if '__main__' == __name__:
         print('SpreadsheetTitle: {} SpreadsheetID: {}'.format(spreadsheet_title, spreadsheet_id))
         for worksheet_title, worksheet_id in list_all_worksheets(spreadsheet_id, verbose=args.verbose):
             print('WorksheetTitle: {} WorksheetID: {}'.format(worksheet_title, worksheet_id))
-            validate_sheet(spreadsheet_id, worksheet_id, verbose=args.verbose)
+            if args.integers:
+                validate_sheet_for_integers(spreadsheet_id, worksheet_id, verbose=args.verbose)
+            if args.dates:
+                validate_sheet_for_dates(spreadsheet_id, worksheet_id, verbose=args.verbose)
