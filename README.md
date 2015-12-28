@@ -29,4 +29,8 @@ https://code.google.com/a/google.com/p/apps-api-issues/issues/detail?id=3851
 Sample Invocations
 ------------------
 
-`./lsSpreadsheet.py -t ~/tokens/gspreadsheet_dj_token.json -n foo`
+`./lsSpreadsheet.py -t oauth_token.json -n foo`
+
+`./validateSpreadsheet.py -t oauth_token.json -n foo -d`
+
+`./validateSpreadsheet.py -t oauth_token.json -n foo -i`
