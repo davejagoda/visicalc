@@ -22,6 +22,17 @@ def get_access_token(tokenFile, refresh=False, verbose=False):
         credentials.authorize(http)
     return(credentials.access_token)
 
+def find_blank_columns(spreadsheet_id, worksheet_id, verbose=False):
+    col_hash = {}
+    cells_feed = gd_client.GetCellsFeed(spreadsheet_id, worksheet_id)
+    for entry in cells_feed.entry:
+        if verbose: print('row:{} col:{} contents:{}'.format(entry.cell.row, entry.cell.col, entry.content.text))
+        col_hash[int(entry.cell.col)] = 1
+    max_col = max(col_hash.keys())
+    for i in range(1, max_col + 1):
+        if i not in col_hash.keys():
+            print('column: {} is blank'.format(i))
+
 def validate_sheet_for_integers(spreadsheet_id, worksheet_id, verbose=False):
     value = 0
     cells_feed = gd_client.GetCellsFeed(spreadsheet_id, worksheet_id)
@@ -83,6 +94,7 @@ if '__main__' == __name__:
     parser.add_argument('-n', '--name', action='store', required=True, help='name of the spreadsheet')
     parser.add_argument('-v', '--verbose', action='store_true', help='be verbose')
     group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-b', '--blanks', action='store_true')
     group.add_argument('-d', '--dates', action='store_true')
     group.add_argument('-i', '--integers', action='store_true')
     args = parser.parse_args()
@@ -102,7 +114,9 @@ if '__main__' == __name__:
         print('SpreadsheetTitle: {} SpreadsheetID: {}'.format(spreadsheet_title, spreadsheet_id))
         for worksheet_title, worksheet_id in list_all_worksheets(spreadsheet_id, verbose=args.verbose):
             print('WorksheetTitle: {} WorksheetID: {}'.format(worksheet_title, worksheet_id))
-            if args.integers:
-                validate_sheet_for_integers(spreadsheet_id, worksheet_id, verbose=args.verbose)
+            if args.blanks:
+                find_blank_columns(spreadsheet_id, worksheet_id, verbose=args.verbose)
             if args.dates:
                 validate_sheet_for_dates(spreadsheet_id, worksheet_id, verbose=args.verbose)
+            if args.integers:
+                validate_sheet_for_integers(spreadsheet_id, worksheet_id, verbose=args.verbose)
