@@ -83,8 +83,8 @@ if '__main__' == __name__:
     parser.add_argument('-n', '--name', action='store', required=True, help='name of the spreadsheet')
     parser.add_argument('-v', '--verbose', action='store_true', help='be verbose')
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-d', '--dates', action="store_true")
-    group.add_argument('-i', '--integers', action="store_true")
+    group.add_argument('-d', '--dates', action='store_true')
+    group.add_argument('-i', '--integers', action='store_true')
     args = parser.parse_args()
     q = gdata.spreadsheet.service.DocumentQuery()
     q['title'] = args.name
