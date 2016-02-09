@@ -24,6 +24,7 @@ def get_access_token(tokenFile, refresh=False, verbose=False):
 
 def find_blank_columns(spreadsheet_id, worksheet_id, verbose=False):
     col_hash = {}
+    blank_cols = []
     cells_feed = gd_client.GetCellsFeed(spreadsheet_id, worksheet_id)
     for entry in cells_feed.entry:
         if verbose: print('row:{} col:{} contents:{}'.format(entry.cell.row, entry.cell.col, entry.content.text))
@@ -31,7 +32,8 @@ def find_blank_columns(spreadsheet_id, worksheet_id, verbose=False):
     max_col = max(col_hash.keys())
     for i in range(1, max_col + 1):
         if i not in col_hash.keys():
-            print('column: {} is blank'.format(i))
+            blank_cols.append(chr(64 + i))
+    print('blank columns:{}'.format(','.join(blank_cols)))
 
 def validate_sheet_for_integers(spreadsheet_id, worksheet_id, verbose=False):
     value = 0
