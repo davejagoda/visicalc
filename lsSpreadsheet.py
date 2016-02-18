@@ -20,9 +20,16 @@ def get_access_token(tokenFile, refresh=False, verbose=False):
 def enumerate_rows(spreadsheet_id, worksheet_id, verbose=False):
     cells_feed = gd_client.GetCellsFeed(spreadsheet_id, worksheet_id)
     print('number of cells found is {}'.format(len(cells_feed.entry)))
+    current_row = cells_feed.entry[0].cell.row
+    row_data = []
     for entry in cells_feed.entry:
-        if verbose: print(entry)
-        print('row:{} col:{} contents:{}'.format(entry.cell.row, entry.cell.col, entry.content.text))
+        if current_row != entry.cell.row:
+            print(unichr(0x00a6).join(row_data))
+            current_row = entry.cell.row
+            row_data = []
+        row_data.append('R{}C{} {}'.format(entry.cell.row, entry.cell.col, entry.content.text))
+        if verbose: print('row:{} col:{} contents:{}'.format(entry.cell.row, entry.cell.col, entry.content.text))
+    print(unichr(0x00a6).join(row_data))
 
 def enumerate_worksheets(spreadsheet_id, show_rows, verbose=False):
     ws_feed = gd_client.GetWorksheetsFeed(spreadsheet_id)
