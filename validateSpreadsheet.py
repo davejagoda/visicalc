@@ -33,7 +33,7 @@ def find_blank_columns(spreadsheet_id, worksheet_id, verbose=False):
     for i in range(1, max_col + 1):
         if i not in col_hash.keys():
             blank_cols.append(chr(64 + i))
-    print('blank columns:{}'.format(','.join(blank_cols)))
+    print('blank columns:{} max column:{}'.format(','.join(blank_cols), chr(64 + max_col)))
 
 def validate_sheet_for_integers(spreadsheet_id, worksheet_id, verbose=False):
     value = 0
