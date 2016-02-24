@@ -25,19 +25,15 @@ You need a `client_secrets.json` file. Go here:
 
 https://console.developers.google.com
 
-Create a new project
+Create a new project.
 
-Create OAuth2 client ID (type Other)
+Create an OAuth2 client ID (type Other).
 
 Save the JSON file somewhere safe.
 
 Grant your project access:
 
 `./writeGoogleBearerToken.py -c client_secrets.json -t oauth_token.json`
-
-Print out details about all your spreadsheets named 'foo' using your token:
-
-`./lsSpreadsheet.py -t oauth_token.json -n foo -v`
 
 Resources
 ---------
@@ -49,8 +45,14 @@ https://code.google.com/a/google.com/p/apps-api-issues/issues/detail?id=3851
 Sample Invocations
 ------------------
 
+Print out details about all your spreadsheets named 'foo' using your token:
+
 `./lsSpreadsheet.py -t oauth_token.json -n foo`
 
+Validate that dates are in ascending order:
+
 `./validateSpreadsheet.py -t oauth_token.json -n foo -d`
+
+Validate that numbers are in ascending order:
 
 `./validateSpreadsheet.py -t oauth_token.json -n foo -i`
