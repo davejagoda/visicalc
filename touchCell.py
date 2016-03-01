@@ -58,22 +58,31 @@ def col_letter_to_number(col):
         ret_val = 26 * ret_val + (ord(c) - ord('A') + 1)
     return(str(ret_val))
 
-def print_cell_contents(gd_client, spreadsheet_id, worksheet_id, cell, verbose=0):
+def validate_cell_label(cell, verbose=0):
     m = re.match('([A-Za-z]+)([0-9]+)', cell)
     col = m.group(1)
     row = m.group(2)
     if cell != col + row:
         print('malformed cell description')
+        return('0', '0')
     col = col_letter_to_number(col)
     if verbose > 0: print(col, row)
+    return(col, row)
+
+def get_cell_feed(gd_client, spreadsheet_id, worksheet_id, col, row, verbose=0):
     q = gdata.spreadsheet.service.CellQuery()
     q.return_empty = 'true'
-    q.min_row = row
-    q.max_row = row
     q.min_col = col
     q.max_col = col
-    cell_feed = gd_client.GetCellsFeed(spreadsheet_id, worksheet_id, query=q)
-    print(cell_feed.entry[0].content.text)
+    q.min_row = row
+    q.max_row = row
+    return(gd_client.GetCellsFeed(spreadsheet_id, worksheet_id, query=q))
+
+def update_cell_contents(gd_client, cell_feed, contents, verbose=0):
+    batchRequest = gdata.spreadsheet.SpreadsheetsCellsFeed()
+    cell_feed.entry[0].cell.inputValue = contents
+    batchRequest.AddUpdate(cell_feed.entry[0])
+    return(gd_client.ExecuteBatch(batchRequest, cell_feed.GetBatchLink().href))
 
 if '__main__' == __name__:
     parser = argparse.ArgumentParser()
@@ -81,6 +90,8 @@ if '__main__' == __name__:
     parser.add_argument('-n', '--name', action='store', required=True, help='name of the spreadsheet')
     parser.add_argument('-w', '--worksheetName', action='store', help='name of the worksheet')
     parser.add_argument('-c', '--cell', action='store', help='cell coordinates (e.g. A1)')
+    parser.add_argument('-s', '--store', action='store', help='what to store in the cell')
+    parser.add_argument('-f', '--force', action='store_true', help='force update to cell even if it contains data')
     parser.add_argument('-v', '--verbose', action='count', help='be verbose')
     args = parser.parse_args()
     q = gdata.spreadsheet.service.DocumentQuery()
@@ -99,6 +110,20 @@ if '__main__' == __name__:
     if spreadsheet_id and worksheet_id:
         if args.verbose > 0: print('sheet validated:{} {}'.format(spreadsheet_id, worksheet_id))
         if args.cell:
-            print_cell_contents(gd_client, spreadsheet_id, worksheet_id, args.cell, verbose=args.verbose)
+            (col, row) = validate_cell_label(args.cell, verbose=0)
+            cell_feed = get_cell_feed(gd_client, spreadsheet_id, worksheet_id, col, row, verbose=args.verbose)
+            cell_contents = cell_feed.entry[0].content.text
+            if cell_contents:
+                print('cell contents:{}'.format(cell_contents))
+            else:
+                print('cell is empty')
+            if args.store:
+                if cell_contents:
+                    if args.force:
+                        print('overwriting cell contents')
+                    else:
+                        print('cell not empty and --force not supplied, preserving cell contents')
+                if args.force or not cell_contents:
+                    print('cell updated at timestamp:{}'.format(update_cell_contents(gd_client, cell_feed, args.store, args.verbose).updated.text))
     else:
         print('sheet did not validate')
