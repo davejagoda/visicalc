@@ -66,34 +66,32 @@ def validate_sheet_for_dates(cells_feed, reverse=False, verbose=False):
             if ('' == entry.content.text):
                 print('blank cell')
                 continue
-            if verbose: print(type(entry.content.text), len(entry.content.text), entry.content.text)
             if ('date' == entry.content.text.lower()):
                 print('date header')
                 continue
-            else:
-                if verbose: print('raw entry.content.text:{}'.format(entry.content.text))
-                try:
-                    if None == compare_date:
+            if verbose: print('raw entry.content.text:{} type:{} length:{}'.format(entry.content.text, type(entry.content.text), len(entry.content.text)))
+            try:
+                if None == compare_date:
+                    try:
+                        datefmt = '%Y-%m-%d'
+                        compare_date = datetime.datetime.strptime(entry.content.text, datefmt)
+                        print('ISO date')
+                    except:
                         try:
-                            datefmt = '%Y-%m-%d'
+                            datefmt = '%m/%d/%Y'
                             compare_date = datetime.datetime.strptime(entry.content.text, datefmt)
-                            print('ISO date')
+                            print('American date')
                         except:
-                            try:
-                                datefmt = '%m/%d/%Y'
-                                compare_date = datetime.datetime.strptime(entry.content.text, datefmt)
-                                print('American date')
-                            except:
-                                datefmt = None
-                                print('could not identify date')
+                            datefmt = None
+                            print('could not identify date')
+                else:
+                    if verbose: print(datetime.datetime.strptime(entry.content.text, datefmt))
+                    if dates_ok(compare_date, datetime.datetime.strptime(entry.content.text, datefmt), reverse):
+                        compare_date = datetime.datetime.strptime(entry.content.text, datefmt)
                     else:
-                        if verbose: print(datetime.datetime.strptime(entry.content.text, datefmt))
-                        if dates_ok(compare_date, datetime.datetime.strptime(entry.content.text, datefmt), reverse):
-                            compare_date = datetime.datetime.strptime(entry.content.text, datefmt)
-                        else:
-                            print('out of order date on worksheet:{} row:{}'.format(worksheet_id, entry.cell.row))
-                except:
-                    print('bad date format on worksheet:{} row:{}'.format(worksheet_id, entry.cell.row))
+                        print('out of order date on worksheet:{} row:{}'.format(worksheet_id, entry.cell.row))
+            except:
+                print('bad date format on worksheet:{} row:{}'.format(worksheet_id, entry.cell.row))
 
 def list_all_worksheets(ws_feed, verbose=False):
     results = []
