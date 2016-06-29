@@ -1,22 +1,8 @@
 #!/usr/bin/env python
 
 import argparse
-import httplib2
-import oauth2client.client
-import gdata.spreadsheet.service
 import xml.etree.ElementTree
-
-def get_access_token(tokenFile, refresh=False, verbose=0):
-    with open(tokenFile, 'r') as f:
-        credentials = oauth2client.client.Credentials.new_from_json(f.read())
-    http = httplib2.Http()
-    if refresh:
-        if verbose > 0: print('refresh')
-        credentials.refresh(http)
-    else:
-        if verbose > 0: print('authorize')
-        credentials.authorize(http)
-    return(credentials.access_token)
+import visicalc_lib
 
 def enumerate_rows(spreadsheet_id, worksheet_id, verbose=0):
     cells_feed = gd_client.GetCellsFeed(spreadsheet_id, worksheet_id)
@@ -58,24 +44,13 @@ def enumerate_documents(ss_feed, show_worksheets, show_rows, verbose=0):
 
 if '__main__' == __name__:
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--tokenFile', action='store', required=True, help='file containing OAuth token in JSON format')
-    parser.add_argument('-n', '--name', action='store', required=True, help='name of the spreadsheet')
+    parser.add_argument('-t', '--tokenFile', required=True, help='file containing OAuth token in JSON format')
+    parser.add_argument('-n', '--name', required=True, help='name of the spreadsheet')
+    parser.add_argument('-e', '--exact', action='store_true', help='match the exact name of the spreadsheet')
     parser.add_argument('-w', '--worksheets', action='store_true', help='set this to list out worksheets (tabs) in each spreadsheet')
     parser.add_argument('-r', '--rows', action='store_true', help='set this to list out rows in each spreadsheet')
     parser.add_argument('-v', '--verbose', action='count', help='be verbose')
     args = parser.parse_args()
-
-    q = gdata.spreadsheet.service.DocumentQuery()
-    q['title'] = args.name
-
-    gd_client = gdata.spreadsheet.service.SpreadsheetsService()
-    access_token = get_access_token(args.tokenFile, refresh=False, verbose=args.verbose)
-    gd_client.additional_headers={'Authorization' : 'Bearer %s' % access_token}
-    try:
-        ss_feed = gd_client.GetSpreadsheetsFeed(query=q)
-    except:
-        access_token = get_access_token(args.tokenFile, refresh=True, verbose=args.verbose)
-        gd_client.additional_headers={'Authorization' : 'Bearer %s' % access_token}
-        ss_feed = gd_client.GetSpreadsheetsFeed(query=q)
+    (gd_client, ss_feed) = visicalc_lib.get_ss_feed_by_ss_name(args.name, args.exact, args.tokenFile, args.verbose)
     print('number of spreadsheets containing the name {} is {}'.format(args.name, len(ss_feed.entry)))
     enumerate_documents(ss_feed, args.worksheets, args.rows, verbose=args.verbose)

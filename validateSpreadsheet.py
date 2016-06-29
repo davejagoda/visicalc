@@ -5,28 +5,15 @@
 # find out of order dates in column A
 
 import argparse
-import httplib2
 import datetime
-import oauth2client.client
 import gdata.spreadsheet.service
+import visicalc_lib
 
-def get_access_token(tokenFile, refresh=False, verbose=False):
-    with open(tokenFile, 'r') as f:
-        credentials = oauth2client.client.Credentials.new_from_json(f.read())
-    http = httplib2.Http()
-    if refresh:
-        if verbose: print('refresh')
-        credentials.refresh(http)
-    else:
-        if verbose: print('authorize')
-        credentials.authorize(http)
-    return(credentials.access_token)
-
-def find_blank_columns(cells_feed, verbose=False):
+def find_blank_columns(cells_feed, verbose=0):
     col_hash = {}
     blank_cols = []
     for entry in cells_feed.entry:
-        if verbose: print('row:{} col:{} contents:{}'.format(entry.cell.row, entry.cell.col, entry.content.text))
+        if verbose > 0: print('row:{} col:{} contents:{}'.format(entry.cell.row, entry.cell.col, entry.content.text))
         col_hash[int(entry.cell.col)] = 1
     max_col = max(col_hash.keys())
     for i in range(1, max_col + 1):
@@ -34,10 +21,10 @@ def find_blank_columns(cells_feed, verbose=False):
             blank_cols.append(chr(64 + i))
     print('blank columns:{} max column:{}'.format(','.join(blank_cols), chr(64 + max_col)))
 
-def validate_sheet_for_integers(cells_feed, verbose=False):
+def validate_sheet_for_integers(cells_feed, verbose=0):
     value = 0
     for entry in cells_feed.entry:
-        if verbose: print('row:{} col:{} contents:{}'.format(entry.cell.row, entry.cell.col, entry.content.text))
+        if verbose > 0: print('row:{} col:{} contents:{}'.format(entry.cell.row, entry.cell.col, entry.content.text))
         if '1' == entry.cell.col:
             if entry.content.text.isdigit():
                 if 0 == value:
@@ -55,10 +42,10 @@ def dates_ok(date1, date2, reverse=False):
     else: # they are in descending order
         return(reverse)
 
-def validate_sheet_for_dates(cells_feed, reverse=False, verbose=False):
+def validate_sheet_for_dates(cells_feed, reverse=False, verbose=0):
     compare_date = None
     for entry in cells_feed.entry:
-        if verbose: print('row:{} col:{} contents:{}'.format(entry.cell.row, entry.cell.col, entry.content.text))
+        if verbose > 0: print('row:{} col:{} contents:{}'.format(entry.cell.row, entry.cell.col, entry.content.text))
         if '1' == entry.cell.col:
             if (None == entry.content.text):
                 print('None cell')
@@ -69,7 +56,7 @@ def validate_sheet_for_dates(cells_feed, reverse=False, verbose=False):
             if ('date' == entry.content.text.lower()):
                 print('date header')
                 continue
-            if verbose: print('raw entry.content.text:{} type:{} length:{}'.format(entry.content.text, type(entry.content.text), len(entry.content.text)))
+            if verbose > 0: print('raw entry.content.text:{} type:{} length:{}'.format(entry.content.text, type(entry.content.text), len(entry.content.text)))
             try:
                 if None == compare_date:
                     try:
@@ -85,7 +72,7 @@ def validate_sheet_for_dates(cells_feed, reverse=False, verbose=False):
                             datefmt = None
                             print('could not identify date')
                 else:
-                    if verbose: print(datetime.datetime.strptime(entry.content.text, datefmt))
+                    if verbose > 0: print(datetime.datetime.strptime(entry.content.text, datefmt))
                     if dates_ok(compare_date, datetime.datetime.strptime(entry.content.text, datefmt), reverse):
                         compare_date = datetime.datetime.strptime(entry.content.text, datefmt)
                     else:
@@ -93,48 +80,29 @@ def validate_sheet_for_dates(cells_feed, reverse=False, verbose=False):
             except:
                 print('bad date format on worksheet:{} row:{}'.format(worksheet_id, entry.cell.row))
 
-def list_all_worksheets(ws_feed, verbose=False):
+def list_all_worksheets(ws_feed, verbose=0):
     results = []
     for entry in ws_feed.entry:
         worksheet_title = entry.title.text
         worksheet_id = entry.id.text.rsplit('/',1)[1]
-        if verbose: print(entry.id.text)
+        if verbose > 0: print(entry.id.text)
         results.append((worksheet_title, worksheet_id))
-    return(results)
-
-def list_all_spreadsheets(ss_feed, verbose=False):
-    results = []
-    for entry in ss_feed.entry:
-        spreadsheet_title = entry.title.text
-        spreadsheet_id = entry.id.text.rsplit('/',1)[1]
-        if verbose: print(entry.id.text)
-        results.append((spreadsheet_title, spreadsheet_id))
     return(results)
 
 if '__main__' == __name__:
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--tokenFile', action='store', required=True, help='file containing OAuth token in JSON format')
-    parser.add_argument('-n', '--name', action='store', required=True, help='name of the spreadsheet')
-    parser.add_argument('-v', '--verbose', action='store_true', help='be verbose')
+    parser.add_argument('-t', '--tokenFile', required=True, help='file containing OAuth token in JSON format')
+    parser.add_argument('-n', '--name', required=True, help='name of the spreadsheet')
+    parser.add_argument('-e', '--exact', action='store_true', help='match the exact name of the spreadsheet')
+    parser.add_argument('-v', '--verbose', action='count', help='be verbose')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-b', '--blanks', action='store_true')
     group.add_argument('-d', '--dates', action='store_true')
     group.add_argument('-r', '--reversedDates', action='store_true')
     group.add_argument('-i', '--integers', action='store_true')
     args = parser.parse_args()
-    q = gdata.spreadsheet.service.DocumentQuery()
-    q['title'] = args.name
-
-    gd_client = gdata.spreadsheet.service.SpreadsheetsService()
-    access_token = get_access_token(args.tokenFile, refresh=False, verbose=args.verbose)
-    gd_client.additional_headers={'Authorization' : 'Bearer %s' % access_token}
-    try:
-        ss_feed = gd_client.GetSpreadsheetsFeed(query=q)
-    except:
-        access_token = get_access_token(args.tokenFile, refresh=True, verbose=args.verbose)
-        gd_client.additional_headers={'Authorization' : 'Bearer %s' % access_token}
-        ss_feed = gd_client.GetSpreadsheetsFeed(query=q)
-    for spreadsheet_title, spreadsheet_id in list_all_spreadsheets(ss_feed, verbose=args.verbose):
+    (gd_client, ss_feed) = visicalc_lib.get_ss_feed_by_ss_name(args.name, args.exact, args.tokenFile, args.verbose)
+    for spreadsheet_title, spreadsheet_id in visicalc_lib.list_all_spreadsheets(ss_feed, verbose=args.verbose):
         print('SpreadsheetTitle: {} SpreadsheetID: {}'.format(spreadsheet_title, spreadsheet_id))
         ws_feed = gd_client.GetWorksheetsFeed(spreadsheet_id)
         for worksheet_title, worksheet_id in list_all_worksheets(ws_feed, verbose=args.verbose):
