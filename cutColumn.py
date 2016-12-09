@@ -23,7 +23,7 @@ if '__main__' == __name__:
         if int(visicalc_lib.col_letter_to_number(args.column)) > int(col_count):
             print('column label is larger than largest column')
         else:
-            cell_feed = get_one_column(gd_client, spreadsheet_id, worksheet_id, visicalc_lib.col_letter_to_number(args.column), row_count, verbose=args.verbose)
+            cell_feed = visicalc_lib.get_one_column(gd_client, spreadsheet_id, worksheet_id, visicalc_lib.col_letter_to_number(args.column), row_count, verbose=args.verbose)
             for entry in cell_feed.entry:
                 print(entry.content.text)
     else:
