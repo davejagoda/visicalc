@@ -12,11 +12,7 @@ Installation
 
 `cd visicalc`
 
-`virtualenv venv`
-
-`source venv/bin/activate`
-
-`pip install -r requirements.txt`
+`pipenv install`
 
 Setup
 -----
@@ -45,14 +41,18 @@ https://code.google.com/a/google.com/p/apps-api-issues/issues/detail?id=3851
 Sample Invocations
 ------------------
 
+Activate pipenv (needed before running any of the subsequent commands):
+
+`pipenv shell`
+
 Print out details about all your spreadsheets named 'foo' using your token:
 
-`./lsSpreadsheet.py -t oauth_token.json -n foo`
+`lsSpreadsheet.py -t oauth_token.json -n foo`
 
 Validate that dates are in ascending order:
 
-`./validateSpreadsheet.py -t oauth_token.json -n foo -d`
+`validateSpreadsheet.py -t oauth_token.json -n foo -d`
 
 Validate that numbers are in ascending order:
 
-`./validateSpreadsheet.py -t oauth_token.json -n foo -i`
+`validateSpreadsheet.py -t oauth_token.json -n foo -i`

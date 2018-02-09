@@ -1,3 +1,0 @@
-gdata
-google-api-python-client
-openpyxl
