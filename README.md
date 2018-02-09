@@ -6,7 +6,7 @@ Google Spreadsheets API using Python
 Installation
 ------------
 
-`cd ~src/github`
+`cd ~/src/github`
 
 `git clone git@github.com:davejagoda/visicalc.git`
 
@@ -34,9 +34,11 @@ Grant your project access:
 Resources
 ---------
 
-http://www.payne.org/index.php/Reading_Google_Spreadsheets_in_Python
+[Reading Google Sheets in Python](http://www.payne.org/index.php/Reading_Google_Spreadsheets_in_Python)
 
-https://code.google.com/a/google.com/p/apps-api-issues/issues/detail?id=3851
+[Parse Error on calling GetSpreadsheetsFeed()](https://code.google.com/a/google.com/p/apps-api-issues/issues/detail?id=3851)
+
+[Product Requirements](PRD.md)
 
 Sample Invocations
 ------------------
