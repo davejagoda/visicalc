@@ -1,2 +1,10 @@
 # Python
 *.py[cod]
+
+# jekyll
+/_site/
+/.jekyll-metadata
+
+# bundler
+/.bundle/
+/vendor/bundle/
