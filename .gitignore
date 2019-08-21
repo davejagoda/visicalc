@@ -6,5 +6,4 @@
 /.jekyll-metadata
 
 # bundler
-/.bundle/
 /vendor/bundle/
