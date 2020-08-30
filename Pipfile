@@ -9,8 +9,11 @@ verify_ssl = true
 
 gdata = "*"
 google-api-python-client = "*"
+oauth2client = "*"
 openpyxl = "*"
 
 
 [dev-packages]
 
+[requires]
+python_version = "2.7"
