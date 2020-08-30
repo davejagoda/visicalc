@@ -1,3 +1,8 @@
+---
+title: PRD
+layout: default
+---
+
 Visicalc Product Requirements Document
 ======================================
 

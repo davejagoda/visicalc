@@ -1,3 +1,8 @@
+---
+title: README
+layout: default
+---
+
 visicalc
 ========
 
